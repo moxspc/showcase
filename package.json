@@ -11,7 +11,8 @@
   "dependencies": {
     "electron": "^1.4.3",
     "electron-rebuild": "^1.2.1",
-    "moxcad": "file:///home/jayesh/code/moxspc/cad"
+    "moxcad": "file:///home/jayesh/code/moxspc/cad",
+    "three": "^0.81.2"
   },
   "devDependencies": {
     "watchify": "^3.7.0"
