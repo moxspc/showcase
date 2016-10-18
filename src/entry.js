@@ -47,7 +47,6 @@ window.onload = function () {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
-  //var geometry = new THREE.BoxGeometry( 1, 1, 1 );
   var material = new THREE.MeshLambertMaterial( { color: 0xff8800, shading: THREE.FlatShading });
 
   let bufferObj = loadSolid();
@@ -58,10 +57,11 @@ window.onload = function () {
 
   for(let faceBuf of bufferObj.faceBuffers) {
     var geometry = new THREE.BufferGeometry();
-    //geometry.setIndex(new THREE.BufferAttribute(idx_, 1));
-    //geometry.addAttribute('position', new THREE.BufferAttribute(vtx_, 3));
     geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(faceBuf.idx), 1));
     geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(faceBuf.vtx), 3));
+    if(faceBuf.nrm) {
+      geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(faceBuf.nrm), 3));
+    }
     let mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
   }
