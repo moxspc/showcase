@@ -3,7 +3,7 @@ const moxcad = window.require('moxcad');
 const THREE = require('three');
 require('../ext/TrackballControls');
 
-function loadSolid () {
+function loadSolid1() {
 	var point1 = new moxcad.geom.Point(0,0,0);
 	var point2 = new moxcad.geom.Point(1,0,0);
 	var point3 = new moxcad.geom.Point(1,1,0);
@@ -22,20 +22,31 @@ function loadSolid () {
 	var solid = moxcad.ops.extrude(face, dir);
 
 	return solid.tessellate();
-	//let fi = 0;
+}
 
-	// for(let faceBuf of bufferObj.faceBuffers) {
-	// 	console.log('Face',fi);
-	// 	console.log('Index');
-	// 	for(let i=0; i<faceBuf.idx.length; i++) {
-	// 		console.log(faceBuf.idx[i]);
-	// 	}
-	// 	console.log('Vertex');
-	// 	for(let i=0; i<faceBuf.vtx.length; i++) {
-	// 		console.log(faceBuf.vtx[i]);
-	// 	}
-	// 	fi++;
-	// }
+function loadSolid2() {
+  var point1 = new moxcad.geom.Point(0,0,0);
+  var point2 = new moxcad.geom.Point(1,0,0);
+  var point3 = new moxcad.geom.Point(1,1,0);
+  var point3_4 = new moxcad.geom.Point(0.5,1.5,0);
+  var point4 = new moxcad.geom.Point(0,1,0);
+
+  var lineseg1 = new moxcad.geom.LineSegment(point1, point2);
+  var lineseg2 = new moxcad.geom.LineSegment(point2, point3);
+  var circarc3 = new moxcad.geom.CircularArc(point3, point3_4, point4);
+  var lineseg4 = new moxcad.geom.LineSegment(point4, point1);
+
+  var edge1 = lineseg1.makeEdge();
+  var edge2 = lineseg2.makeEdge();
+  var edge3 = circarc3.makeEdge();
+  var edge4 = lineseg4.makeEdge();
+
+  var wire = new moxcad.topo.Wire(edge1, edge2, edge3, edge4);
+  var face = wire.makeFace();
+  var dir = new moxcad.geom.Vector(0,0,1);
+  var solid = moxcad.ops.extrude(face, dir);
+
+  return solid.tessellate();
 }
 
 
@@ -49,7 +60,7 @@ window.onload = function () {
 
   var material = new THREE.MeshLambertMaterial( { color: 0xff8800, shading: THREE.FlatShading });
 
-  let bufferObj = loadSolid();
+  let bufferObj = loadSolid2();
   let faceBuf = bufferObj.faceBuffers[0];
 
   let vtx_ = new Float32Array([0,0,0,0,0,1,5,0,0,5,0,1]);
@@ -65,12 +76,6 @@ window.onload = function () {
     let mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
   }
-
-  // console.log(''+faceBuf.idx);
-  // console.log(''+faceBuf.vtx);
-
-  //var cube = new THREE.Mesh( geometry, material );
-  //scene.add( cube );
 
   scene.add( new THREE.AmbientLight( 0x111111 ) );
   var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.525 );
@@ -89,11 +94,7 @@ window.onload = function () {
 
   var render = function () {
     requestAnimationFrame( render );
-
-    //mesh.rotation.x += 0.01;
-    //mesh.rotation.y += 0.01;
     controls.update();
-
     renderer.render(scene, camera);
   };
 
