@@ -52,42 +52,78 @@ function loadSolid2() {
 
 window.onload = function () {
   var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+  var camera = new THREE.PerspectiveCamera(
+    75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 
   var renderer = new THREE.WebGLRenderer();
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
-  var material = new THREE.MeshLambertMaterial( { color: 0xff8800, shading: THREE.FlatShading });
 
   let bufferObj = loadSolid2();
-  let faceBuf = bufferObj.faceBuffers[0];
 
-  let vtx_ = new Float32Array([0,0,0,0,0,1,5,0,0,5,0,1]);
-  let idx_ = new Uint32Array([2,0,1,2,1,3]);
-
+  // Add mesh for each face
+  var faceMaterial = new THREE.MeshLambertMaterial(
+    { color: 0xff8800, shading: THREE.SmoothShading });
   for(let faceBuf of bufferObj.faceBuffers) {
     var geometry = new THREE.BufferGeometry();
-    geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(faceBuf.idx), 1));
-    geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(faceBuf.vtx), 3));
+    geometry.setIndex(
+      new THREE.BufferAttribute(new Uint32Array(faceBuf.idx), 1));
+    geometry.addAttribute('position',
+      new THREE.BufferAttribute(new Float32Array(faceBuf.vtx), 3));
     if(faceBuf.nrm) {
-      geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(faceBuf.nrm), 3));
+      geometry.addAttribute('normal',
+        new THREE.BufferAttribute(new Float32Array(faceBuf.nrm), 3));
     }
-    let mesh = new THREE.Mesh(geometry, material);
+    let mesh = new THREE.Mesh(geometry, faceMaterial);
+    scene.add(mesh);
+  }
+
+  // Add line for each edge
+  var lineMaterial = new THREE.LineBasicMaterial(
+    { vertexColors: THREE.VertexColors, linewidth : 3 });
+  for(let edgeBuf of bufferObj.edgeBuffers) {
+    let geometry = new THREE.BufferGeometry();
+    let positions = [];
+    let indices = [];
+    let colors = [];
+    let i=0;
+    for(let point of edgeBuf.points) {
+      positions.push(...point);
+      colors.push(Math.random()*0.5+0.5, Math.random()*0.5+0.5, 1);
+      if(i < edgeBuf.points.length-1) {
+        indices.push(i, i+1);
+      }
+      i++;
+    }
+    geometry.addAttribute('position',
+      new THREE.BufferAttribute(new Float32Array(positions), 3));
+    geometry.addAttribute('color',
+      new THREE.BufferAttribute(new Float32Array(colors), 3));
+    geometry.setIndex(
+      new THREE.BufferAttribute(new Uint32Array(indices), 1));
+    geometry.computeBoundingSphere();
+    let mesh = new THREE.LineSegments( geometry, lineMaterial );
     scene.add(mesh);
   }
 
   scene.add( new THREE.AmbientLight( 0x111111 ) );
   var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.525 );
-  directionalLight.position.x = Math.random() - 0.5;
-  directionalLight.position.y = Math.random() - 0.5;
-  directionalLight.position.z = Math.random() - 0.5;
+  directionalLight.position.x = 0;
+  directionalLight.position.y = 5;
+  directionalLight.position.z = 5;
   directionalLight.position.normalize();
   scene.add( directionalLight );
 
-  camera.position.z = 5;
+  let axishelper = new THREE.AxisHelper(5);
+  scene.add(axishelper);
 
-  let controls = new THREE.TrackballControls( camera, renderer.domElement );
+  camera.position.z = 5;
+  camera.position.y = 5;
+  camera.position.x = 5;
+  camera.lookAt(new THREE.Vector3());
+
+  let controls = new THREE.TrackballControls(camera, renderer.domElement );
   controls.minDistance = 1.0;
   controls.maxDistance = 8.0;
   controls.dynamicDampingFactor = 0.1;
