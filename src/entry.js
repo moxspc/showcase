@@ -59,6 +59,7 @@ window.onload = function () {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
+  let pickables = [];
 
   let bufferObj = loadSolid2();
 
@@ -76,12 +77,13 @@ window.onload = function () {
         new THREE.BufferAttribute(new Float32Array(faceBuf.nrm), 3));
     }
     let mesh = new THREE.Mesh(geometry, faceMaterial);
-    scene.add(mesh);
+    //scene.add(mesh);
+    //pickables.push(mesh);
   }
 
   // Add line for each edge
   var lineMaterial = new THREE.LineBasicMaterial(
-    { vertexColors: THREE.VertexColors, linewidth : 3 });
+    { vertexColors: THREE.VertexColors, linewidth : 1 });
   for(let edgeBuf of bufferObj.edgeBuffers) {
     let geometry = new THREE.BufferGeometry();
     let positions = [];
@@ -105,6 +107,7 @@ window.onload = function () {
     geometry.computeBoundingSphere();
     let mesh = new THREE.LineSegments( geometry, lineMaterial );
     scene.add(mesh);
+    pickables.push(mesh);
   }
 
   scene.add( new THREE.AmbientLight( 0x111111 ) );
@@ -123,16 +126,60 @@ window.onload = function () {
   camera.position.x = 5;
   camera.lookAt(new THREE.Vector3());
 
+  let raycaster = new THREE.Raycaster();
+  raycaster.linePrecision = 3;
+
   let controls = new THREE.TrackballControls(camera, renderer.domElement );
   controls.minDistance = 1.0;
   controls.maxDistance = 8.0;
   controls.dynamicDampingFactor = 0.1;
 
+  let meshUnderCursor = null;
+
+  document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+  window.addEventListener( 'resize', onWindowResize, false );
+
+  let mouse = new THREE.Vector2();
+
+  function onDocumentMouseMove(event) {
+
+    event.preventDefault();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+  }
+
+  function onWindowResize(event) {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+  }
+
   var render = function () {
-    requestAnimationFrame( render );
+    requestAnimationFrame(render);
     controls.update();
+
+    raycaster.setFromCamera(mouse, camera);
+    var intersects = raycaster.intersectObjects(pickables, true);
+    if (intersects.length > 0) {
+      // if(meshUnderCursor) {
+      //   if(meshUnderCursor.material instanceof THREE.LineBasicMaterial) {
+      //     meshUnderCursor.material.linewidth = 1;
+      //   }
+      // }
+      pickables.forEach(mesh => {
+        if(mesh.material instanceof THREE.LineBasicMaterial) {
+          mesh.material.linewidth = 1;
+        }
+      });
+      meshUnderCursor = intersects[0].object;
+      meshUnderCursor.material.linewidth = 4;
+      console.log(meshUnderCursor);
+    }
+
     renderer.render(scene, camera);
   };
 
   render();
 };
+
